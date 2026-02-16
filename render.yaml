@@ -2,7 +2,7 @@
 services:
   - type: web
     name: mba-backend-main
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -57,7 +57,7 @@ services:
   # Celery Beat Scheduler
   - type: worker
     name: mba-celery-beat
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -85,7 +85,7 @@ services:
   # Celery Worker - Fast Queue
   - type: worker
     name: mba-celery-fast
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -113,7 +113,7 @@ services:
   # Celery Worker - Slow Queue
   - type: worker
     name: mba-celery-slow
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -141,7 +141,7 @@ services:
   # Celery Worker - Events Queue
   - type: worker
     name: mba-celery-events
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -169,7 +169,7 @@ services:
   # Legacy workers (kept for compatibility)
   - type: worker
     name: mba-hydration-worker
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
@@ -208,7 +208,7 @@ services:
 
   - type: worker
     name: mba-queue-worker
-    env: python
+    runtime: python
     plan: starter
     region: oregon
     branch: main
