@@ -1,0 +1,28 @@
+# Optional ML/NLP/Heavy packages for BuilTPro Brain AI
+#
+# These packages require C compilation, system libraries, or have limited
+# wheel availability.  All backend services that import these packages use
+# try/except ImportError guards and degrade gracefully when absent.
+#
+# Install separately on production/Render:
+#   pip install -r requirements-ml-optional.txt || true
+#
+# Required system packages for some of these:
+#   apt-get install -y libboost-all-dev tesseract-ocr libreoffice
+
+# IFC / BIM processing
+ifcopenshell==0.8.4.post1
+ezdxf==1.2.0
+
+# NLP
+spacy==3.7.5
+langdetect==1.0.9
+
+# Vector search
+faiss-cpu==1.8.0
+
+# Causal inference / ML
+scikit-learn==1.6.1
+mapie==1.1.0
+dowhy==0.12
+causalml==0.15.5
