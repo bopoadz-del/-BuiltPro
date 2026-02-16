@@ -243,5 +243,5 @@ databases:
 # Database with updated plan (legacy starter no longer supported)
   - name: mba-postgres-main
     databaseName: diriyah_ai_main
-    plan: basic
+    plan: standard
     region: oregon
