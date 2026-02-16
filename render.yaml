@@ -16,7 +16,6 @@ services:
   - type: web
     name: mba-backend-main
     runtime: python
-    pythonVersion: 3.12
     plan: starter
     region: oregon
     branch: main
