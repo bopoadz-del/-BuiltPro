@@ -33,21 +33,29 @@ else
 fi
 echo ""
 
-# Run database migrations
+# Run database migrations from backend directory
 echo "Running database migrations..."
-cd backend
-if alembic current >/dev/null 2>&1; then
-    echo "  Current revision: $(alembic current 2>/dev/null | grep -oP '^\w+' || echo 'unknown')"
-    alembic upgrade head
-    if [ $? -eq 0 ]; then
-        echo "  Migrations: SUCCESS"
+if [ -d "backend/alembic" ]; then
+    # Ensure alembic is available in the virtual environment
+    ALEMBIC_CMD="${VIRTUAL_ENV:-/opt/render/project/.venv}/bin/alembic"
+    if [ -x "$ALEMBIC_CMD" ]; then
+        # Run migrations from the backend directory
+        if (cd backend && $ALEMBIC_CMD current >/dev/null 2>&1); then
+            echo "  Current revision: $(cd backend && $ALEMBIC_CMD current 2>/dev/null | grep -oP '^\w+' || echo 'unknown')"
+            if (cd backend && $ALEMBIC_CMD upgrade head); then
+                echo "  Migrations: SUCCESS"
+            else
+                echo "  Migrations: FAILED (continuing anyway)"
+            fi
+        else
+            echo "  Alembic not initialized, skipping migrations"
+        fi
     else
-        echo "  Migrations: FAILED (continuing anyway)"
+        echo "  Alembic not found, skipping migrations"
     fi
 else
-    echo "  Alembic not initialized, skipping migrations"
+    echo "  Alembic directory not found, skipping migrations"
 fi
-cd ..
 echo ""
 
 # Initialize database if needed
