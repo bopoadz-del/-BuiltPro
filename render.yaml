@@ -1,45 +1,32 @@
----
 services:
-  # Redis - keyvalue service with IP allow list
   - type: keyvalue
     name: mba-redis
     plan: starter
     region: oregon
     ipAllowList: []
 
-  # Main web service
   - type: web
     name: mba-backend-main
-    runtime: python
+    runtime: docker
     plan: starter
     region: oregon
     branch: main
-    buildCommand: ./render-build.sh
-    startCommand: ./render_start.sh
+    dockerCommand: bash ./render_start.sh
     envVars:
       - key: OPENAI_API_KEY
         sync: false
+
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: mba-db
+          property: connectionString
+
       - key: REDIS_URL
         fromService:
           name: mba-redis
           type: keyvalue
           property: connectionString
-      - key: CHROMA_HOST
-        sync: false
-      - key: CHROMA_PORT
-        sync: false
-      - key: INSTALL_DEV_REQUIREMENTS
-        value: "false"
-      - key: INIT_DB_ON_STARTUP
-        value: "true"
-      - key: DEMO_SEED_SOURCES
-        value: "true"
-      - key: MPLCONFIGDIR
-        value: "/tmp/matplotlib"
-      - key: NODE_VERSION
-        value: "20"
+
       - key: LOG_LEVEL
         value: "DEBUG"
       - key: PYTHONUNBUFFERED
@@ -48,179 +35,20 @@ services:
         value: "1"
       - key: PROMETHEUS_ENABLED
         value: "true"
-      - key: VITE_WORKSPACE_ID
-        value: "demo"
-      - key: VITE_USER_ID
-        value: "demo"
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: ENV
         value: "production"
-      - key: USE_STUB_CONNECTORS
-        value: "false"
+      - key: INIT_DB_ON_STARTUP
+        value: "true"
+      - key: DEMO_SEED_SOURCES
+        value: "true"
+      - key: MPLCONFIGDIR
+        value: "/tmp/matplotlib"
+
     healthCheckPath: /health
 
-  # Celery Beat Scheduler
-  - type: worker
-    name: mba-celery-beat
-    runtime: python
-    plan: starter
+databases:
+  - name: mba-db
+    plan: basic-256mb
     region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      cd backend && exec celery -A jobs.celery_app beat --loglevel=info"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  # Celery Worker - Fast Queue
-  - type: worker
-    name: mba-celery-fast
-    runtime: python
-    plan: starter
-    region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      cd backend && exec celery -A jobs.celery_app worker -Q fast -n fast@%h --loglevel=info --concurrency=2"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  # Celery Worker - Slow Queue
-  - type: worker
-    name: mba-celery-slow
-    runtime: python
-    plan: starter
-    region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      cd backend && exec celery -A jobs.celery_app worker -Q slow -n slow@%h --loglevel=info --concurrency=1"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  # Celery Worker - Events Queue
-  - type: worker
-    name: mba-celery-events
-    runtime: python
-    plan: starter
-    region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      cd backend && exec celery -A jobs.celery_app worker -Q trigger_events -n events@%h --loglevel=info --concurrency=2"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: LOG_LEVEL
-        value: "INFO"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  # Legacy workers
-  - type: worker
-    name: mba-hydration-worker
-    runtime: python
-    plan: starter
-    region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      WORKER_NAME=hydration exec python -m scripts.noop_worker"
-    envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: HYDRATION_ENABLED
-        value: "true"
-      - key: HYDRATION_TZ
-        value: "Asia/Riyadh"
-      - key: HYDRATION_HOUR
-        value: "2"
-      - key: HYDRATION_MINUTE
-        value: "0"
-      - key: HYDRATION_POLL_SECONDS
-        value: "60"
-      - key: LOG_LEVEL
-        value: "DEBUG"
-      - key: PYTHONUNBUFFERED
-        value: "1"
-
-  - type: worker
-    name: mba-queue-worker
-    runtime: python
-    plan: starter
-    region: oregon
-    branch: main
-    buildCommand: ./render-build.sh
-    startCommand: >-
-      bash -c "if [ -f /opt/render/project/.venv/bin/activate ]; then
-        source /opt/render/project/.venv/bin/activate;
-      fi;
-      WORKER_NAME=queue exec python -m scripts.noop_worker"
-    envVars:
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          name: mba-redis
-          type: keyvalue
-          property: connectionString
-      - key: LOG_LEVEL
-        value: "DEBUG"
