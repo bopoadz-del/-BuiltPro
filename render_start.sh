@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+
+# Render writable uploads dir
+export UPLOAD_DIR="${UPLOAD_DIR:-/tmp/uploads}"
+mkdir -p "$UPLOAD_DIR"
 set -e
 
 echo "=== BuiltPro Render Startup Script ==="
